@@ -1,22 +1,44 @@
-import re
+import re 
 
-def GC_content(FASTA):
-    total_seq = []    
+class FASTA_methods():
+    def __init__(self, FASTA, Max_GC_count):
+        self.FASTA = FASTA
+        self.Max_GC_count = GC_count
     
+    def Is_ID(self, FASTA):
+        ID_set = () 
+        for line in str(FASTA).splitlines():
+            if re.search('^>', line) == True:
+                ID_set.
+                return line
+            
+    def GC_content(self, FASTA):
+        for line in str(FASTA).splitlines():
+            while re.search('^>', line) == False:
+                GC_count += line.count('G') + line.count('C')
+
+
+
+
+
+''' 
     for line in FASTA.splitlines():
 
-        if re.search('^>', line) != None:
+
+        if re.search('^>', line) == True:
             if total_seq != []:
+                #conta o conteudo GC a cada linha
                 GC_count = str(total_seq).count('C') + str(total_seq).count('G')
                 print((GC_count)/len(''.join(total_seq)))
             print(line[1:])
             total_seq.clear()
         
-        if re.search(r'\d', line) == None:
+        if re.search(r'\d', line) == False:
             total_seq.append(line)
     GC_count = str(total_seq).count('C') + str(total_seq).count('G')
     print((GC_count)/len(''.join(total_seq)))
     return "That's IDs and GC contents of this FASTA document"
+'''
 txt = '''>Rosalind_9091
 AAAACACGGTCGCTTAGAGCGTGCTTGAACAATGAACTCGGCACTACGGTGGTAGAAAGT
 CGGGACCCAATACAGGGGGATGAATCACGTGCGTTCGCCATTCACTCCCTTTACCCCGAC
