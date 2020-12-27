@@ -1,2 +1,2 @@
 # Starting-Bioinfo
-Initial python projects in bioinformatics
+Initial bioinformatics projects in python
