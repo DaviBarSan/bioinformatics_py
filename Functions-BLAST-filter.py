@@ -3,7 +3,7 @@ import re
 import xlsxwriter
 
 #create a workbook and a worksheet ---> ('newfilename.xlsx')
-workbook = xlsxwriter.Workbook('CHYB-beta-carotene-oxygenase-ketolase.xlsx')
+workbook = xlsxwriter.Workbook('cytochrome-P450-hydroxylase.xlsx')
 worksheet = workbook.add_worksheet()
 
 parameters = ('Query Name', 'Query Acss Number', 'Biological Source','Contig Acss Number', 'Score (Bits)', 'Expect', 'Frame', 'Start', 'Stop')
@@ -26,8 +26,8 @@ for item in parameters:
     col +=1
 row +=1
 #set file path 
-filename = "/home/barrel/Desktop/Biologia/P5/Bioinformática/Projeto_Bioinfo/BLAST-DATA/CTP4/BLAST-results/TBLASTN-results/blast-CHYB-beta-carotene-oxygenase-ketolase.txt"
-fi = open(filename, "r")
+filepath = "/home/barrel/Desktop/Biologia/P5/Bioinformática/Projeto_Bioinfo/BLAST-DATA/CTP4/BLAST-results/TBLASTN-results/blast-cytochrome-P450-hydroxylase.txt"
+fi = open(filepath, "r")
 
 contents = fi.readlines()
 
