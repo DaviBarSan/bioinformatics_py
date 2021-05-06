@@ -3,7 +3,7 @@ import re
 import xlsxwriter
 
 #create a workbook and a worksheet ---> ('newfilename.xlsx')
-workbook = xlsxwriter.Workbook('cytochrome-P450-hydroxylase.xlsx')
+workbook = xlsxwriter.Workbook('PSY-phytoene-synthase-Chlorophytas.xlsx')
 worksheet = workbook.add_worksheet()
 
 parameters = ('Query Name', 'Query Acss Number', 'Biological Source','Contig Acss Number', 'Score (Bits)', 'Expect', 'Frame', 'Start', 'Stop')
@@ -26,8 +26,8 @@ for item in parameters:
     col +=1
 row +=1
 #set file path 
-filepath = "/home/barrel/Desktop/Biologia/P5/Bioinformática/Projeto_Bioinfo/BLAST-DATA/CTP4/BLAST-results/TBLASTN-results/blast-cytochrome-P450-hydroxylase.txt"
-fi = open(filepath, "r")
+filename = "/home/barrel/Desktop/Biologia/P5/Bioinformática/Projeto_Bioinfo/BLAST-DATA/CTP4/BLAST-results/TBLASTN-results/blast-PSY-phytoene-synthase-Chlorophytas.txt"
+fi = open(filename, "r")
 
 contents = fi.readlines()
 
@@ -42,9 +42,13 @@ def query_name(string_line):
     try:
         query_name = re.search(r"(?<=\.\d\s\b)\w...+(?=\[)", line)
         return query_name.group()
-    except:
-        query_name = re.search(r"(?<=\.\d\s\b)\w...+", line)
-        return query_name.group()
+    except AttributeError:
+        try:
+            query_name = re.search(r"(?<=\.\d\s\b)\w...+", line)
+            return query_name.group()
+        except AttributeError:
+            query_name = re.search(r"(?<=Full=)\w...+", line)
+            return query_name.group()
 
 
 #function to return contig_id in each line
@@ -100,7 +104,7 @@ for line in contents:
             specie_name = data_specie_name.group()
             worksheet.write(row, 2, specie_name)
             continue
-        except:
+        except AttributeError:
             #matching all the specie name untill the breake line
             # appending puzzle one to specie_puzzle    
             puzzle_one = re.search(r"(?<=\[)...+", line)
@@ -117,7 +121,6 @@ for line in contents:
         specie_puzzle.clear()
     #caso encontre contig id em line
     elif re.search(r"^>\w+", line): 
-        #data_id_row += 1
         contig_str_id = contig_id(line)
         worksheet.write_string(row, 3, contig_str_id)
     #a cada iteração do 'for', preencher células abaixo do primeiro match do id,
@@ -140,8 +143,6 @@ for line in contents:
         #uma vez que o position_number é preenchido segundo os dados do match anterior,
         # é necessário guardar o valor do last frame, para determinar o start e stop
         frame_list.append(int(frame_str_data))
-       
-       
         #uma vez que Frame é usado como flag para preenchimento das frames anteriores
         #se a lista de ref. não estiver vazia (evita error do primeiro match com ''frame'' encontrado)
         #a lista position numbers é preenchida em iterações após o match com o primeiro ''frame'', uma vez que os dados 
