@@ -3,15 +3,16 @@ import re
 import xlsxwriter
 
 #create a workbook and a worksheet ---> ('newfilename.xlsx')
-workbook = xlsxwriter.Workbook('PSY-phytoene-synthase-Chlorophytas.xlsx')
+workbook = xlsxwriter.Workbook('PSY-phytoene-synthase-Chlorophytas_test.xlsx')
 worksheet = workbook.add_worksheet()
 
-parameters = ('Query Name', 'Query Acss Number', 'Biological Source','Contig Acss Number', 'Score (Bits)', 'Expect', 'Frame', 'Start', 'Stop')
+parameters = ('Query Name', 'Query Acss Number', 'Biological Source','Contig Acss Number', 'Score (Bits)', 'Expect', 'Frame', 'Start', 'Stop','Protein Coverage - Start', 'Protein Coverage - Stop','Length')
 
 row = 0
 col = 0
 
-
+#temporary list that stores position start and stop references to each protein region matched
+tmp_query_coverage = []
 #temporary list that stores position start and stop references to each frame reading
 position_numbers_list = []
 #temporary list that store "pieces" of species name
@@ -19,6 +20,8 @@ specie_puzzle = []
 #lista para guardar os dados do frame
 #uma vez que o position numbers usa os dados do penultimo match com ''frame''
 frame_list = []
+#flag to protein lenght. Might exist to do not mismatch the T. striata sequence alingned, instead of query length
+protein_len_flag = False 
 
 #creating .xlsx headers
 for item in parameters:
@@ -76,7 +79,10 @@ def frame_data(string_line):
     
     return frame_data.group()
 
-#function store position numbers reference and set then as start or stop reference
+#function store lenght of current query
+def query_prot_len(string_line):
+    prot_length = re.search(r"(?<=\bLength\b=\b).+", string_line)
+    return prot_length.group()
    
 
 #iterating over blastresults data for each line
@@ -90,7 +96,13 @@ for line in contents:
         #regexing enzyme name and specie name in list[1]
         enzyme_name = query_name(line)
         worksheet.write(row, 0, enzyme_name)
+        protein_len_flag = True
     
+    if (re.search(r"(?<=\bLength\b=\b).+", line) and protein_len_flag == True):
+        curr_prot_len = query_prot_len(line)
+        worksheet.write(row, 11, curr_prot_len)
+        protein_len_flag = False
+
     
     #regexing species name in multiple situations
     #Most case will run, but some can raise exception because breaklines;
@@ -146,8 +158,13 @@ for line in contents:
         #uma vez que Frame é usado como flag para preenchimento das frames anteriores
         #se a lista de ref. não estiver vazia (evita error do primeiro match com ''frame'' encontrado)
         #a lista position numbers é preenchida em iterações após o match com o primeiro ''frame'', uma vez que os dados 
-        # de start e stop referentes àquele frame só são obtidos em iterações seguintes ao match com o frame; 
+        # de start e stop referentes àquele frame só são obtidos em iterações seguintes ao match com o frame;
+        # (row-1) pois o worksheet é preenchido em retrocesso. O match atual preenche as coordenadas referente ao match anterior   
         if position_numbers_list != []:
+            start_position_prot_coverage = min(tmp_query_coverage)
+            stop_position_prot_coverage = max(tmp_query_coverage)
+            worksheet.write(row-1, 9, start_position_prot_coverage)
+            worksheet.write(row-1, 10, stop_position_prot_coverage)
             if  frame_list[-2]> 0:
                 start_position = min(position_numbers_list)
                 stop_position = max(position_numbers_list)
@@ -162,6 +179,8 @@ for line in contents:
         #é necessario um backup para preencher os dados referentes ao ultimo frame do documento FASTA
         backup_last_position_numbers_list = position_numbers_list
         position_numbers_list.clear()
+        backup_last_query_position_numbers_list = tmp_query_coverage
+        tmp_query_coverage.clear()
         
         #preenchendo todas as células da planilha, com as referências correspondentes ao respectivo frame, até estas serem atualizadas
         #query_name (nome da enzima); query_accss_number; specie; contig_id;
@@ -169,6 +188,8 @@ for line in contents:
         worksheet.write(row, 1, query_numb)
         worksheet.write(row, 2, specie_name)
         worksheet.write_string(row, 3, contig_str_id)
+        worksheet.write(row, 11, curr_prot_len)
+
         #testing jumping lines inside last function called (provisório ser em frame, final version sera em 'stop')
         row +=1    
     #a cada match com um position reference, estes numeros serão adicionados a position_number_list. Esta lista 
@@ -179,8 +200,17 @@ for line in contents:
         for i in position_data_list_str:
             position_numbers_list.append(int(i))
 
+    if re.search(r"\bQuery\s...+", line):
+        tmp_query_coverage_str = re.findall(r"\d+\b", line)
+        for i in tmp_query_coverage_str:
+            tmp_query_coverage.append(int(i))
+
 
     if re.search(r"\bMatrix:\s", line):##flag to end the loop and close the file 
+        start_position_prot_coverage = min(backup_last_query_position_numbers_list)
+        stop_position_prot_coverage = max(backup_last_query_position_numbers_list)
+        worksheet.write(row-1, 9, start_position_prot_coverage)
+        worksheet.write(row-1, 10, stop_position_prot_coverage)
         #dados start stop do ultimo frame
         if frame_list[-1] > 0:
             start_position = min(backup_last_position_numbers_list)
